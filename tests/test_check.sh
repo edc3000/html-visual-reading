@@ -45,4 +45,82 @@ if bash "$ROOT/scripts/check.sh" "$TMP/script.html" >/dev/null 2>&1; then
   fail "script 标签不成对未被拦截"
 fi
 
+# 新增测试用例（对抗性）
+
+# 1. 大写 LINK 标签必须被拦
+cat > "$TMP/link_upper.html" <<'EOF'
+<!doctype html>
+<html lang="zh-CN"><head><title>页面</title><LINK REL="Stylesheet" HREF="https://cdn.example.com/style.css"></head>
+<body><main></main><script>var x=1;</script></body></html>
+EOF
+if bash "$ROOT/scripts/check.sh" "$TMP/link_upper.html" >/dev/null 2>&1; then
+  fail "大写 LINK 标签未被拦截"
+fi
+
+# 2. 无扩展名的远程脚本必须被拦
+cat > "$TMP/script_noext.html" <<'EOF'
+<!doctype html>
+<html lang="zh-CN"><head><title>页面</title></head>
+<body><main></main><script src="https://analytics.example.com/track"></script></body></html>
+EOF
+if bash "$ROOT/scripts/check.sh" "$TMP/script_noext.html" >/dev/null 2>&1; then
+  fail "无扩展名远程脚本未被拦截"
+fi
+
+# 3. srcset 中的外部图片必须被拦
+cat > "$TMP/srcset.html" <<'EOF'
+<!doctype html>
+<html lang="zh-CN"><head><title>页面</title></head>
+<body><main><img srcset="https://cdn.example.com/big.jpg 2x"></main><script>var x=1;</script></body></html>
+EOF
+if bash "$ROOT/scripts/check.sh" "$TMP/srcset.html" >/dev/null 2>&1; then
+  fail "srcset 中的外部图片未被拦截"
+fi
+
+# 4. style 中的 url() 必须被拦
+cat > "$TMP/style_url.html" <<'EOF'
+<!doctype html>
+<html lang="zh-CN"><head><title>页面</title></head>
+<body><main><div style="background:url(https://cdn.example.com/bg.png)">内容</div></main><script>var x=1;</script></body></html>
+EOF
+if bash "$ROOT/scripts/check.sh" "$TMP/style_url.html" >/dev/null 2>&1; then
+  fail "style 中的 url() 未被拦截"
+fi
+
+# 5. onerror 事件必须被拦
+cat > "$TMP/onerror.html" <<'EOF'
+<!doctype html>
+<html lang="zh-CN"><head><title>页面</title></head>
+<body><main><img src="data:image/png;base64,AAAA" onerror="alert(1)"></main><script>var x=1;</script></body></html>
+EOF
+if bash "$ROOT/scripts/check.sh" "$TMP/onerror.html" >/dev/null 2>&1; then
+  fail "onerror 事件未被拦截"
+fi
+
+# 6. 大写 ONCLICK 必须被拦
+cat > "$TMP/onclick_upper.html" <<'EOF'
+<!doctype html>
+<html lang="zh-CN"><head><title>页面</title></head>
+<body><main><button ONCLICK="doThing()">按钮</button></main><script>var x=1;</script></body></html>
+EOF
+if bash "$ROOT/scripts/check.sh" "$TMP/onclick_upper.html" >/dev/null 2>&1; then
+  fail "大写 ONCLICK 事件未被拦截"
+fi
+
+# 7. data-testid 不应误判为重复 id（必须通过）
+cat > "$TMP/data_id.html" <<'EOF'
+<!doctype html>
+<html lang="zh-CN"><head><title>页面</title></head>
+<body><main><section id="intro"></section><section data-testid="intro"></section></main><script>var x=1;</script></body></html>
+EOF
+bash "$ROOT/scripts/check.sh" "$TMP/data_id.html" >/dev/null 2>&1 || fail "data-testid 被误判为重复 id"
+
+# 8. a href 指向数据文件应放行（.json 导航链接）（必须通过）
+cat > "$TMP/link_json.html" <<'EOF'
+<!doctype html>
+<html lang="zh-CN"><head><title>页面</title></head>
+<body><main><a href="https://example.com/report.json">数据</a></main><script>var x=1;</script></body></html>
+EOF
+bash "$ROOT/scripts/check.sh" "$TMP/link_json.html" >/dev/null 2>&1 || fail "a href 导航链接被误拦"
+
 echo "PASS test_check"
