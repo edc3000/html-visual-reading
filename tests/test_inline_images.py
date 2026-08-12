@@ -167,5 +167,71 @@ class InlineLocalTest(unittest.TestCase):
         self.assertEqual(warnings, [])
 
 
+import http.server
+import threading
+
+
+class RemoteImageTest(unittest.TestCase):
+    """用本地 http server 验证远程抓取，不依赖外网。"""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.serve_dir = tempfile.mkdtemp()
+        make_png(os.path.join(cls.serve_dir, 'remote.png'), 60, 40, alpha=False)
+
+        handler = http.server.SimpleHTTPRequestHandler
+        directory = cls.serve_dir
+
+        class Handler(handler):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, directory=directory, **kwargs)
+
+            def log_message(self, *args):
+                pass
+
+        cls.httpd = http.server.HTTPServer(('127.0.0.1', 0), Handler)
+        cls.port = cls.httpd.server_address[1]
+        cls.thread = threading.Thread(target=cls.httpd.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.httpd.shutdown()
+
+    def test_remote_image_inlined(self):
+        work = tempfile.mkdtemp()
+        html = '<img src="http://127.0.0.1:%d/remote.png">' % self.port
+        out, inlined, warnings = ii.process(html, work, work)
+        self.assertIn('src="data:image/', out)
+        self.assertEqual(len(inlined), 1)
+        self.assertEqual(warnings, [])
+
+    def test_unreachable_remote_warns_and_keeps_src(self):
+        work = tempfile.mkdtemp()
+        url = 'http://127.0.0.1:%d/missing.png' % self.port
+        html = '<img src="%s">' % url
+        out, inlined, warnings = ii.process(html, work, work)
+        self.assertIn(url, out)
+        self.assertEqual(inlined, [])
+        self.assertEqual(len(warnings), 1)
+
+
+class ReportTest(unittest.TestCase):
+
+    def test_report_under_threshold_has_no_warning(self):
+        lines = ii.report([('a.png', 1000), ('b.png', 2000)])
+        self.assertEqual(len(lines), 1)
+        self.assertIn('2 张', lines[0])
+
+    def test_report_over_threshold_lists_largest(self):
+        big = [('img%d.png' % i, 2 * 1024 * 1024) for i in range(6)]
+        lines = ii.report(big)
+        joined = '\n'.join(lines)
+        self.assertIn('超过', joined)
+        self.assertIn('img0.png', joined)
+        # 只列最大的 5 张：1 行汇总 + 1 行告警 + 5 行明细
+        self.assertEqual(len(lines), 7)
+
+
 if __name__ == '__main__':
     unittest.main()

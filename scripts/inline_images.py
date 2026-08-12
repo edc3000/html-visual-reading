@@ -106,11 +106,28 @@ def resolve_local(src, base_dir):
     return candidate if os.path.isfile(candidate) else None
 
 
-def fetch(src, base_dir, workdir, warnings):
-    """返回可读的本地文件路径；失败返回 None 并写入告警。
+def fetch_remote(url, workdir, warnings):
+    """用 curl 下载远程图片，失败返回 None。"""
+    suffix = os.path.splitext(url.split('?')[0])[1] or '.img'
+    counter = next(_tmp_counter)
+    dst = os.path.join(workdir, 'remote_%d%s' % (counter, suffix))
+    try:
+        proc = subprocess.run(
+            ['curl', '-sSL', '--max-time', '20', '--fail', '-o', dst, url],
+            capture_output=True, text=True)
+    except OSError as exc:
+        warnings.append('curl 不可用，保留原引用: %s (%s)' % (url, exc))
+        return None
+    if proc.returncode != 0 or not os.path.exists(dst) or os.path.getsize(dst) == 0:
+        warnings.append('远程图片下载失败，保留原引用: %s' % url)
+        return None
+    return dst
 
-    Task 3 会在此扩展远程 URL 支持。
-    """
+
+def fetch(src, base_dir, workdir, warnings):
+    """返回可读的本地文件路径；失败返回 None 并写入告警。"""
+    if src.startswith('http://') or src.startswith('https://'):
+        return fetch_remote(src, workdir, warnings)
     local = resolve_local(src, base_dir)
     if local is None:
         warnings.append('图片不存在，保留原引用: %s' % src)
@@ -155,6 +172,18 @@ def process(html, base_dir, workdir):
     return result, inlined, warnings
 
 
+def report(inlined):
+    """生成体积报告行。总量超阈值时列出最大的 5 张。"""
+    total = sum(size for _, size in inlined)
+    lines = ['已内联 %d 张图片，合计 %.1f MB' % (len(inlined), total / 1048576.0)]
+    if total > TOTAL_WARN_BYTES:
+        lines.append('警告: 图片总体积超过 %d MB，考虑删减以下几张'
+                     % (TOTAL_WARN_BYTES // 1048576))
+        for src, size in sorted(inlined, key=lambda item: -item[1])[:5]:
+            lines.append('  %.1f MB  %s' % (size / 1048576.0, src))
+    return lines
+
+
 def main(argv):
     if len(argv) < 3:
         print('用法: inline_images.py <in.html> <out.html> [--base-dir <dir>]',
@@ -178,8 +207,8 @@ def main(argv):
     for warning in warnings:
         print('警告: ' + warning, file=sys.stderr)
 
-    total = sum(size for _, size in inlined)
-    print('已内联 %d 张图片，合计 %.1f MB' % (len(inlined), total / 1048576.0))
+    for line in report(inlined):
+        print(line)
     return 0
 
 
