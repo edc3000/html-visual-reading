@@ -24,10 +24,14 @@ cat "$HEAD" "$BODY" "$TAIL" > "$TMP/merged.html"
 # 用 python 做占位替换，避免 sed 对 & / 斜杠等字符的转义陷阱
 python3 - "$TMP/merged.html" "$TMP/titled.html" "$TITLE" "$DESC" <<'PY'
 import sys
+import html as htmlesc
 src, dst, title, desc = sys.argv[1:5]
 with open(src, encoding='utf-8') as f:
     html = f.read()
-html = html.replace('__TITLE__', title).replace('__DESCRIPTION__', desc)
+# HTML 转义标题和描述
+title_esc = htmlesc.escape(title, quote=True)
+desc_esc = htmlesc.escape(desc, quote=True)
+html = html.replace('__TITLE__', title_esc).replace('__DESCRIPTION__', desc_esc)
 with open(dst, 'w', encoding='utf-8') as f:
     f.write(html)
 PY
