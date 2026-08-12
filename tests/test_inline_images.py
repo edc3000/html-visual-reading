@@ -151,6 +151,21 @@ class InlineLocalTest(unittest.TestCase):
                            for w in warnings),
                        'Expected warning about unparseable img tags')
 
+    def test_svg_with_wrong_extension(self):
+        # SVG 内容但扩展名错误（.png），to_data_uri 应识别内容而非文件名
+        svg_path = os.path.join(self.tmp, 'chart.png')  # 注意：.png 后缀
+        svg_content = b'<?xml version="1.0"?>\n<svg xmlns="http://www.w3.org/2000/svg">\n'
+        svg_content += b'<circle cx="50" cy="50" r="40" />\n</svg>'
+        with open(svg_path, 'wb') as f:
+            f.write(svg_content)
+        # process() 应正确识别为 SVG，产生 SVG data URI 而非 PNG
+        html = '<img src="chart.png">'
+        out, inlined, warnings = ii.process(html, self.tmp, self.work)
+        self.assertIn('data:image/svg+xml;base64,', out)
+        self.assertNotIn('data:image/png;base64,', out)
+        self.assertEqual(len(inlined), 1)
+        self.assertEqual(warnings, [])
+
 
 if __name__ == '__main__':
     unittest.main()

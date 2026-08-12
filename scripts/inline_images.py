@@ -86,9 +86,13 @@ def compress(path, workdir):
 
 
 def to_data_uri(path):
-    mime = mimetypes.guess_type(path)[0]
-    if mime is None:
-        mime = 'application/octet-stream'
+    # 内容嗅探优先于扩展名（防止 SVG 内容被错误识别为其他类型）
+    if _is_svg(path):
+        mime = 'image/svg+xml'
+    else:
+        mime = mimetypes.guess_type(path)[0]
+        if mime is None:
+            mime = 'application/octet-stream'
     with open(path, 'rb') as f:
         payload = base64.b64encode(f.read()).decode('ascii')
     return 'data:%s;base64,%s' % (mime, payload)
@@ -124,7 +128,6 @@ def process(html, base_dir, workdir):
         nonlocal matched_count
         matched_count += 1
         prefix = match.group(1)  # <img...src=
-        quote = match.group(2)   # " 或 '
         src = match.group(3)     # 内容
         if src.startswith('data:'):
             return match.group(0)
