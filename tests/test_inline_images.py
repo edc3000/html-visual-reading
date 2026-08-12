@@ -178,6 +178,9 @@ class RemoteImageTest(unittest.TestCase):
     def setUpClass(cls):
         cls.serve_dir = tempfile.mkdtemp()
         make_png(os.path.join(cls.serve_dir, 'remote.png'), 60, 40, alpha=False)
+        # 创建伪造的图片——返回 200 但内容是 HTML
+        with open(os.path.join(cls.serve_dir, 'fake.png'), 'w') as f:
+            f.write('<html><body><h1>404 Not Found</h1></body></html>')
 
         handler = http.server.SimpleHTTPRequestHandler
         directory = cls.serve_dir
@@ -197,6 +200,7 @@ class RemoteImageTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.httpd.shutdown()
+        cls.httpd.server_close()
 
     def test_remote_image_inlined(self):
         work = tempfile.mkdtemp()
@@ -215,6 +219,17 @@ class RemoteImageTest(unittest.TestCase):
         self.assertEqual(inlined, [])
         self.assertEqual(len(warnings), 1)
 
+    def test_fake_image_content_warns_and_keeps_src(self):
+        work = tempfile.mkdtemp()
+        url = 'http://127.0.0.1:%d/fake.png' % self.port
+        html = '<img src="%s">' % url
+        out, inlined, warnings = ii.process(html, work, work)
+        # 200 响应但内容是 HTML，应产生告警并保留原引用
+        self.assertIn(url, out)
+        self.assertEqual(inlined, [])
+        self.assertEqual(len(warnings), 1)
+        self.assertIn('内容', warnings[0])
+
 
 class ReportTest(unittest.TestCase):
 
@@ -224,11 +239,27 @@ class ReportTest(unittest.TestCase):
         self.assertIn('2 张', lines[0])
 
     def test_report_over_threshold_lists_largest(self):
-        big = [('img%d.png' % i, 2 * 1024 * 1024) for i in range(6)]
+        # 6 张图，体积从大到小：6MB, 5MB, 4MB, 3MB, 2MB, 1MB
+        # 乱序传入以验证排序逻辑
+        big = [
+            ('img_small.png', 1 * 1024 * 1024),
+            ('img_huge.png', 6 * 1024 * 1024),
+            ('img_large.png', 5 * 1024 * 1024),
+            ('img_medium.png', 3 * 1024 * 1024),
+            ('img_mediumlarge.png', 4 * 1024 * 1024),
+            ('img_mediummid.png', 2 * 1024 * 1024),
+        ]
         lines = ii.report(big)
         joined = '\n'.join(lines)
         self.assertIn('超过', joined)
-        self.assertIn('img0.png', joined)
+        # 应列出最大的 5 张：img_huge, img_large, img_mediumlarge, img_medium, img_mediummid
+        self.assertIn('img_huge.png', joined)
+        self.assertIn('img_large.png', joined)
+        self.assertIn('img_mediumlarge.png', joined)
+        self.assertIn('img_medium.png', joined)
+        self.assertIn('img_mediummid.png', joined)
+        # 最小的不应出现在明细里
+        self.assertNotIn('img_small.png', joined)
         # 只列最大的 5 张：1 行汇总 + 1 行告警 + 5 行明细
         self.assertEqual(len(lines), 7)
 

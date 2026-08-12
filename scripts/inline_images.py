@@ -34,6 +34,28 @@ def _is_svg(path):
             head.startswith(b'<svg'))
 
 
+def _looks_like_image(path):
+    """检查文件内容是否像图片（magic byte）。只用于校验远程下载的文件。"""
+    if _is_svg(path):
+        return True
+    try:
+        with open(path, 'rb') as f:
+            head = f.read(16)
+    except OSError:
+        return False
+    if head.startswith(b'\x89PNG\r\n\x1a\n'):
+        return True
+    if head.startswith(b'\xff\xd8\xff'):
+        return True
+    if head.startswith(b'GIF87a') or head.startswith(b'GIF89a'):
+        return True
+    if head.startswith(b'RIFF') and head[8:12] == b'WEBP':
+        return True
+    if head.startswith(b'BM'):
+        return True
+    return False
+
+
 def sips_get(path, key):
     """读取 sips 属性，取不到返回 None（非位图如 SVG 会走到这里）。"""
     try:
@@ -108,7 +130,9 @@ def resolve_local(src, base_dir):
 
 def fetch_remote(url, workdir, warnings):
     """用 curl 下载远程图片，失败返回 None。"""
-    suffix = os.path.splitext(url.split('?')[0])[1] or '.img'
+    # 剥掉查询串和片段
+    url_base = url.split('?')[0].split('#')[0]
+    suffix = os.path.splitext(url_base)[1] or '.img'
     counter = next(_tmp_counter)
     dst = os.path.join(workdir, 'remote_%d%s' % (counter, suffix))
     try:
@@ -118,8 +142,17 @@ def fetch_remote(url, workdir, warnings):
     except OSError as exc:
         warnings.append('curl 不可用，保留原引用: %s (%s)' % (url, exc))
         return None
-    if proc.returncode != 0 or not os.path.exists(dst) or os.path.getsize(dst) == 0:
+    if proc.returncode != 0:
+        # curl 失败，提取 stderr 首行（如有）
+        error_detail = (proc.stderr.splitlines()[0] if proc.stderr else '') or '未知原因'
+        warnings.append('远程图片下载失败，保留原引用: %s (%s)' % (url, error_detail))
+        return None
+    if not os.path.exists(dst) or os.path.getsize(dst) == 0:
         warnings.append('远程图片下载失败，保留原引用: %s' % url)
+        return None
+    # 校验内容像不像图片
+    if not _looks_like_image(dst):
+        warnings.append('远程内容不像图片（可能是 HTML 错误页），保留原引用: %s' % url)
         return None
     return dst
 
