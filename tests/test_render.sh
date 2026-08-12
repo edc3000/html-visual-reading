@@ -15,9 +15,12 @@ for FIXTURE in "$ROOT"/tests/fixtures/body-*.html; do
   EXPECT="$ROOT/tests/fixtures/$NAME.expect"
   [ -f "$EXPECT" ] || fail "$NAME 缺少断言文件 $EXPECT"
   while IFS= read -r line; do
-    [ -z "$line" ] && continue
+    # trim 行首尾空白后判空
+    trimmed="${line#"${line%%[![:space:]]*}"}"
+    trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
+    [ -z "$trimmed" ] && continue
     grep -qF -- "$line" "$OUT" || fail "$NAME 缺少: $line"
-  done < "$EXPECT"
+  done < <(cat "$EXPECT"; echo)
 
   echo "  ok: $NAME"
 done
