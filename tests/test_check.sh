@@ -123,4 +123,22 @@ cat > "$TMP/link_json.html" <<'EOF'
 EOF
 bash "$ROOT/scripts/check.sh" "$TMP/link_json.html" >/dev/null 2>&1 || fail "a href 导航链接被误拦"
 
+# 9. srcset 本地 + 同一行的 a href 外链应放行（测试边界匹配）（必须通过）
+cat > "$TMP/srcset_local_link.html" <<'EOF'
+<!doctype html>
+<html lang="zh-CN"><head><title>页面</title></head>
+<body><main><img srcset="local1.jpg 1x, local2.jpg 2x"> <a href="https://arxiv.org/abs/1234">原文</a></main><script>var x=1;</script></body></html>
+EOF
+bash "$ROOT/scripts/check.sh" "$TMP/srcset_local_link.html" >/dev/null 2>&1 || fail "srcset 本地+外链 a href 被误判"
+
+# 10. srcset 真的外部图片必须被拦（确认收紧后真违规还能拦）
+cat > "$TMP/srcset_ext.html" <<'EOF'
+<!doctype html>
+<html lang="zh-CN"><head><title>页面</title></head>
+<body><main><img srcset="https://cdn.example.com/big.jpg 2x"></main><script>var x=1;</script></body></html>
+EOF
+if bash "$ROOT/scripts/check.sh" "$TMP/srcset_ext.html" >/dev/null 2>&1; then
+  fail "srcset 真外部图片未被拦截"
+fi
+
 echo "PASS test_check"

@@ -17,8 +17,8 @@ if grep -iqE '[[:space:]]src=["'"'"']https?://' "$FILE"; then
   report "存在外部资源 src"
 fi
 
-# 检查 srcset="http..." 或 srcset='http...'（大小写不敏感）
-if grep -iqE '[[:space:]]srcset=["'"'"'].*https?://' "$FILE"; then
+# 检查 srcset="http..." 或 srcset='http...'（大小写不敏感，用反向引用锁住属性值边界）
+if grep -iqE '[[:space:]]srcset=(["'"'"'])[^"'"'"']*https?://[^"'"'"']*\1' "$FILE"; then
   report "存在外部资源 srcset"
 fi
 
