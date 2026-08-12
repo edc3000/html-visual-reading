@@ -36,5 +36,8 @@ with open(dst, 'w', encoding='utf-8') as f:
     f.write(html)
 PY
 
-cp "$TMP/titled.html" "$OUT"
+python3 "$ROOT/scripts/inline_images.py" "$TMP/titled.html" "$OUT" \
+  --base-dir "$(cd "$(dirname "$BODY")" && pwd)"
+
 echo "已生成: $OUT ($(wc -c < "$OUT" | tr -d ' ') 字节)"
+bash "$ROOT/scripts/check.sh" "$OUT"
