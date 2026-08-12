@@ -112,6 +112,45 @@ class InlineLocalTest(unittest.TestCase):
         with open(dst, encoding='utf-8') as f:
             self.assertIn('data:image/', f.read())
 
+    def test_svg_not_converted(self):
+        # 构造一个超过 300KB 的 SVG（包含大量注释）
+        svg_path = os.path.join(self.tmp, 'big.svg')
+        svg_content = b'<?xml version="1.0"?>\n<svg xmlns="http://www.w3.org/2000/svg">\n'
+        svg_content += b'<!-- ' + (b'x' * 310000) + b' -->\n'
+        svg_content += b'<circle cx="50" cy="50" r="40" />\n</svg>'
+        with open(svg_path, 'wb') as f:
+            f.write(svg_content)
+        self.assertGreater(os.path.getsize(svg_path), 300 * 1024)
+        # compress() 应原样返回 SVG 路径
+        result = ii.compress(svg_path, self.work)
+        self.assertEqual(result, svg_path)
+        # process() 应产生 SVG data URI，不是 JPEG
+        html = '<img src="big.svg">'
+        out, inlined, warnings = ii.process(html, self.tmp, self.work)
+        self.assertIn('data:image/svg+xml;base64,', out)
+        self.assertEqual(warnings, [])
+
+    def test_single_quoted_src_inlined(self):
+        img = os.path.join(self.tmp, 'fig.png')
+        make_png(img, 40, 20, alpha=False)
+        html = "<img src='fig.png' alt='x'>"
+        out, inlined, warnings = ii.process(html, self.tmp, self.work)
+        self.assertIn('src="data:image/', out)
+        self.assertNotIn("src='fig.png'", out)
+        self.assertEqual(len(inlined), 1)
+
+    def test_unquoted_src_warns(self):
+        img = os.path.join(self.tmp, 'fig.png')
+        make_png(img, 40, 20, alpha=False)
+        html = '<img src=fig.png>'
+        out, inlined, warnings = ii.process(html, self.tmp, self.work)
+        # 正则应匹配不到无引号的 src，产生告警
+        self.assertEqual(len(inlined), 0)
+        # 应该有关于未解析 img 的告警
+        self.assertTrue(any('img' in w.lower() and '无法解析' in w
+                           for w in warnings),
+                       'Expected warning about unparseable img tags')
+
 
 if __name__ == '__main__':
     unittest.main()

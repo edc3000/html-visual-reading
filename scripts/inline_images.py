@@ -5,6 +5,7 @@
 记录告警、保留原引用、继续处理下一张。
 """
 import base64
+import itertools
 import mimetypes
 import os
 import re
@@ -16,7 +17,21 @@ MAX_WIDTH = 1600
 JPEG_THRESHOLD = 300 * 1024
 TOTAL_WARN_BYTES = 5 * 1024 * 1024
 
-IMG_SRC_RE = re.compile(r'(<img\b[^>]*?\bsrc=")([^"]+)(")', re.IGNORECASE)
+IMG_SRC_RE = re.compile(r'(<img\b[^>]*?\bsrc=)(["\'])(.*?)\2', re.IGNORECASE)
+_tmp_counter = itertools.count()
+
+
+def _is_svg(path):
+    """检查文件是否为 SVG（扩展名或内容嗅探）。"""
+    if os.path.splitext(path)[1].lower() == '.svg':
+        return True
+    try:
+        with open(path, 'rb') as f:
+            head = f.read(1024).lstrip()
+    except OSError:
+        return False
+    return (head.startswith(b'<?xml') and b'<svg' in head or
+            head.startswith(b'<svg'))
 
 
 def sips_get(path, key):
@@ -35,14 +50,19 @@ def sips_get(path, key):
 
 def compress(path, workdir):
     """按需缩放与转码，返回处理后的文件路径（可能就是入参）。"""
+    # SVG 不转码，直接返回
+    if _is_svg(path):
+        return path
+
     width = sips_get(path, 'pixelWidth')
     if width is None:
         return path
 
     current = path
     try:
-        if int(width) > MAX_WIDTH:
-            dst = os.path.join(workdir, 'resized_' + os.path.basename(path))
+        if int(float(width)) > MAX_WIDTH:
+            counter = next(_tmp_counter)
+            dst = os.path.join(workdir, '%d_resized_%s' % (counter, os.path.basename(path)))
             subprocess.run(['sips', '--resampleWidth', str(MAX_WIDTH),
                             current, '--out', dst], capture_output=True)
             if os.path.exists(dst) and os.path.getsize(dst) > 0:
@@ -53,8 +73,9 @@ def compress(path, workdir):
     # 转 JPEG 会让透明区域变黑，因此只对不含 alpha 的图做转换
     if (os.path.getsize(current) > JPEG_THRESHOLD
             and sips_get(current, 'hasAlpha') == 'no'):
+        counter = next(_tmp_counter)
         base = os.path.splitext(os.path.basename(path))[0]
-        dst = os.path.join(workdir, base + '_converted.jpg')
+        dst = os.path.join(workdir, '%d_%s_converted.jpg' % (counter, base))
         subprocess.run(['sips', '-s', 'format', 'jpeg',
                         '-s', 'formatOptions', '80', current, '--out', dst],
                        capture_output=True)
@@ -97,9 +118,14 @@ def process(html, base_dir, workdir):
     """返回 (替换后的 html, [(src, 字节数)], [告警])。"""
     inlined = []
     warnings = []
+    matched_count = 0
 
     def replace(match):
-        prefix, src, suffix = match.group(1), match.group(2), match.group(3)
+        nonlocal matched_count
+        matched_count += 1
+        prefix = match.group(1)  # <img...src=
+        quote = match.group(2)   # " 或 '
+        src = match.group(3)     # 内容
         if src.startswith('data:'):
             return match.group(0)
         path = fetch(src, base_dir, workdir, warnings)
@@ -112,9 +138,18 @@ def process(html, base_dir, workdir):
             warnings.append('图片处理失败，保留原引用: %s (%s)' % (src, exc))
             return match.group(0)
         inlined.append((src, len(uri)))
-        return prefix + uri + suffix
+        # 统一输出为双引号
+        return prefix + '"' + uri + '"'
 
-    return IMG_SRC_RE.sub(replace, html), inlined, warnings
+    result = IMG_SRC_RE.sub(replace, html)
+
+    # 检查是否有 img 标签没被正则匹配到
+    total_tags = len(re.findall(r'<img\b', html, re.IGNORECASE))
+    if total_tags > matched_count:
+        warnings.append('有 %d 个 <img> 标签的 src 无法解析，产物可能残留外部引用'
+                       % (total_tags - matched_count))
+
+    return result, inlined, warnings
 
 
 def main(argv):
