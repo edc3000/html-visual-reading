@@ -28,22 +28,45 @@
     if (prog) prog.textContent = cur + ' / ' + total;
   }
 
+  function toggleExpand(head) {
+    var expand = head.parentElement;
+    var on = expand.classList.toggle('on');
+    head.setAttribute('aria-expanded', on ? 'true' : 'false');
+  }
+
+  function toggleFig(toggle) {
+    var fig = toggle.closest('figure');
+    var on = fig.classList.toggle('on');
+    toggle.setAttribute('aria-expanded', on ? 'true' : 'false');
+    toggle.textContent = on ? '收起说明 ▴' : '展开说明 ▸';
+  }
+
   document.addEventListener('click', function (e) {
     var head = e.target.closest ? e.target.closest('.expand-head') : null;
-    if (head) { head.parentElement.classList.toggle('on'); return; }
+    if (head) { toggleExpand(head); return; }
 
     var toggle = e.target.closest('.fig-toggle');
-    if (toggle) {
-      var fig = toggle.closest('figure');
-      fig.classList.toggle('on');
-      toggle.textContent = fig.classList.contains('on')
-        ? '收起说明 ▴'
-        : '展开说明 ▸';
-      return;
-    }
+    if (toggle) { toggleFig(toggle); return; }
 
     var btn = e.target.closest('[data-flow-action]');
     if (btn) flowAction(btn);
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+
+    var head = e.target.closest ? e.target.closest('.expand-head') : null;
+    if (head) {
+      if (e.key !== 'Enter') e.preventDefault();
+      toggleExpand(head);
+      return;
+    }
+
+    var toggle = e.target.closest ? e.target.closest('.fig-toggle') : null;
+    if (toggle) {
+      if (e.key !== 'Enter') e.preventDefault();
+      toggleFig(toggle);
+    }
   });
 
   var sections = document.querySelectorAll('.section[id]');

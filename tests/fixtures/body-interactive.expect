@@ -13,6 +13,15 @@ line-height:1.7;overflow-wrap:break-word}
 .fig-cap{margin-top:10px;font-size:13.5px;color:var(--muted);max-width:var(--measure);overflow-wrap:break-word}
 font-size:14.5px;overflow-wrap:break-word}
 .expand-body-inner p{margin-top:0;max-width:none;overflow-wrap:break-word}
-background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:800;
+background:var(--accent-soft);color:var(--accent-ink);font-size:12px;font-weight:800;
 .flow-node.on{opacity:1;border-color:var(--accent);background:var(--accent-soft)}
-color:var(--accent);cursor:pointer;user-select:none}
+color:var(--accent-ink);cursor:pointer;user-select:none}
+.btn-primary{background:var(--accent-ink);color:#fff}
+.expand-head:focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}
+.fig-toggle:focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}
+tabindex="0" role="button" aria-expanded="false"
+function toggleExpand
+function toggleFig
+addEventListener('keydown'
+e.preventDefault()
+on ? 'true' : 'false'
