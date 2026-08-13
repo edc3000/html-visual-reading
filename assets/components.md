@@ -70,7 +70,7 @@
 
 ## 5. 概念卡网格
 
-什么时候用：一次性介绍几个并列的概念或术语。不要用来堆放不同类的信息（会破坏下面第 4 条规则说的交替配色）。
+什么时候用：一次性介绍几个并列的概念或术语。不要用来堆放不同类的信息（会破坏上面第 4 条规则说的交替配色）。
 
 约束：每张卡固定四段——`h3` 术语中文名、`.term` 英文原名、`p` 一句话定义、`.analogy` 日常类比。**类比不可省**，这是给外行读者的桥。
 
@@ -173,6 +173,8 @@
 
 什么时候用：默认收起、按需展开的补充细节——比如"为什么要这么做"的解释。折叠态必须带一句话摘要，不能只挂标题。
 
+约束：展开后的内容高度上限约 2400px（骨架 `.expand-body` 的 `max-height`），超过会被静默截断——没有滚动条、也没有任何提示，读者根本不知道内容被切掉了。2400px 大致相当于 85 行正文，一段较长的解释配一段 30 行左右的代码块就可能顶到上限。内容多时拆成多个 `.expand` 卡片，不要把过深的说明硬塞进一个折叠区里。
+
 ```html
     <div class="expand">
       <div class="expand-head" tabindex="0" role="button" aria-expanded="false">
@@ -231,13 +233,14 @@
 
 什么时候用：一张示意图配文字导览。一屏至多一个视觉锚点。
 
-约束：`.fig-cap` 一句话说清整张图在讲什么；`.fig-detail-inner` 里至少 3 条分点，逐个讲清模块/箭头/配色的含义；宽流程图给 `figure` 加 `.fig-scroll` 允许横向滚动，不要压扁。
+约束：`.fig-cap` 一句话说清整张图在讲什么；`.fig-detail-inner` 里至少 3 条分点，逐个讲清模块/箭头/配色的含义；宽流程图给 `figure` 加 `.fig-scroll` 允许横向滚动，不要压扁。展开后的内容高度上限约 1600px（骨架 `.fig-detail` 的 `max-height`），超过同样会被静默截断、不出现滚动条——分点别堆太多太长，讲不完就精简，不要指望它能滚动。
 
 ```html
     <figure>
       <img src="diagram.png" alt="示意图">
       <div class="fig-cap">这张图讲的是三个阶段之间的数据流向。</div>
-      <span class="fig-toggle" tabindex="0" role="button" aria-expanded="false">展开说明 ▸</span>
+      <span class="fig-toggle" tabindex="0" role="button" aria-expanded="false"
+            data-label-close="展开说明 ▸" data-label-open="收起说明 ▴">展开说明 ▸</span>
       <div class="fig-detail"><div class="fig-detail-inner">
         <ul>
           <li><b>左侧方块</b>：原始输入，此时还没有任何加工。</li>
@@ -249,6 +252,8 @@
 ```
 
 `img` 的 `src` 用本地路径或 `data:` URI，构建脚本会自动内联；禁止写 `http(s)` 外链，`check.sh` 会拦截。图偏宽（比如流程截图）时用 `<figure class="fig-scroll">`。
+
+触发文案由 `data-label-close`（折叠态，也是 span 的初始文本）和 `data-label-open`（展开态）两个属性提供，骨架脚本据此切换文案；不写这两个属性时落回默认的「展开说明 ▸」/「收起说明 ▴」。原图收进折叠区、正文放自制 SVG 这种用法下，常把文案改成「查看原图 ▸」/「收起原图 ▴」——改的话两处都要改：属性值和 span 的初始文本内容必须和 `data-label-close` 一致。
 
 ## 14. 结尾清单
 

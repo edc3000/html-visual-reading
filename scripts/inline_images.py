@@ -231,8 +231,8 @@ def main(argv):
     with open(src_path, encoding='utf-8') as f:
         html = f.read()
 
-    workdir = tempfile.mkdtemp()
-    result, inlined, warnings = process(html, base_dir, workdir)
+    with tempfile.TemporaryDirectory() as workdir:
+        result, inlined, warnings = process(html, base_dir, workdir)
 
     with open(dst_path, 'w', encoding='utf-8') as f:
         f.write(result)

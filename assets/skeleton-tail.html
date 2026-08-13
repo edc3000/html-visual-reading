@@ -38,7 +38,9 @@
     var fig = toggle.closest('figure');
     var on = fig.classList.toggle('on');
     toggle.setAttribute('aria-expanded', on ? 'true' : 'false');
-    toggle.textContent = on ? '收起说明 ▴' : '展开说明 ▸';
+    var openLabel = toggle.getAttribute('data-label-open') || '收起说明 ▴';
+    var closeLabel = toggle.getAttribute('data-label-close') || '展开说明 ▸';
+    toggle.textContent = on ? openLabel : closeLabel;
   }
 
   document.addEventListener('click', function (e) {
