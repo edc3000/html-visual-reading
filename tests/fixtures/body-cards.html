@@ -1,0 +1,54 @@
+<main class="container">
+  <section class="section" id="c1">
+    <div class="section-num">01</div>
+    <h2>先认识几个基础概念</h2>
+    <div class="grid c2">
+      <div class="concept">
+        <h3>粒子滤波</h3>
+        <div class="term">Particle Filter</div>
+        <p>同时保留很多种可能的猜测，再根据新证据淘汰不合理的那些。</p>
+        <div class="analogy">像找钥匙时先列出十个可能放的地方，每想起一个细节就划掉几个。</div>
+      </div>
+      <div class="concept">
+        <h3>中位数聚合</h3>
+        <div class="term">Median Aggregation</div>
+        <p>把多次测量取中间那个值，而不是取平均。</p>
+        <div class="analogy">评委打分去掉最高最低分，防一个人乱打就带偏结果。</div>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric"><div class="metric-value">773</div>
+        <div class="metric-label">训练井数量</div>
+        <div class="metric-note">相当于一个中型油田的全部记录</div></div>
+      <div class="metric"><div class="metric-value">5.09M</div>
+        <div class="metric-label">训练总行数</div>
+        <div class="metric-note">逐行读完要不吃不喝三个月</div></div>
+      <div class="metric"><div class="metric-value">3</div>
+        <div class="metric-label">公开测试井</div>
+        <div class="metric-note">答题时只有这三口可参考</div></div>
+      <div class="metric"><div class="metric-value">0.5</div>
+        <div class="metric-label">分箱精度（英尺）</div>
+        <div class="metric-note">约一个成年人的小臂长度</div></div>
+    </div>
+
+    <div class="panels">
+      <div class="panel good"><div class="panel-title"><span class="dot"></span>适合这么做</div>
+        <ul><li>信息来源互相独立</li><li>单一来源容易失效</li></ul></div>
+      <div class="panel bad"><div class="panel-title"><span class="dot"></span>不适合这么做</div>
+        <ul><li>数据量小到不够分</li><li>各来源其实同源</li></ul></div>
+    </div>
+
+    <div class="note"><b>补充：</b>这是一条普通提示。</div>
+    <div class="note warn"><b>注意：</b>这是一条需要警惕的提示。</div>
+
+    <div class="code-cap">关键代码 · 把一口井压成参考曲线</div>
+    <pre><code>grouped = df.groupby(bin_id)["gr"].median()</code></pre>
+
+    <div class="formula"><b>分箱：</b>bin(x) = round(x / 0.5) × 0.5<br><b>聚合：</b>median</div>
+
+    <div class="takeaway">
+      <ul><li>第一条可带走的结论</li><li>第二条可带走的结论</li></ul>
+    </div>
+  </section>
+</main>

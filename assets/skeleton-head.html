@@ -76,6 +76,70 @@ h1{font-size:clamp(30px,5vw,46px);line-height:1.16;font-weight:800;letter-spacin
   .keypoint p{font-size:16px}
   .section{padding:44px 0}
 }
+.grid{display:grid;gap:14px;margin-top:24px}
+.grid.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.concept{background:var(--surface);border:1px solid var(--line);
+  border-left:4px solid var(--accent);border-radius:var(--radius);padding:18px 20px}
+.concept:nth-child(2n){border-left-color:var(--accent2)}
+.concept h3{margin:0;font-size:16px;font-weight:700;line-height:1.4}
+.concept .term{margin-top:3px;font-size:12px;color:var(--muted);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.concept p{margin-top:9px;max-width:none;font-size:14.5px;color:#55524C}
+.concept .analogy{margin-top:11px;padding-top:11px;border-top:1px dashed var(--line);
+  font-size:14px;color:var(--muted)}
+
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:24px}
+.metric{background:var(--surface);border:1px solid var(--line);
+  border-top:3px solid var(--accent);border-radius:var(--radius);
+  padding:16px 14px;text-align:center}
+.metric-value{font-size:24px;font-weight:800;color:var(--accent);line-height:1.2;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.metric-label{margin-top:6px;font-size:12.5px;color:var(--muted)}
+.metric-note{margin-top:5px;font-size:12px;color:#8B857C;line-height:1.5}
+
+.panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:24px}
+.panel{background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius);padding:20px 22px}
+.panel-title{display:flex;align-items:center;gap:8px;font-size:15px;
+  font-weight:700;margin-bottom:6px}
+.panel-title .dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.panel.good .panel-title{color:var(--accent2)}
+.panel.bad .panel-title{color:var(--accent)}
+.panel ul{margin:0;list-style:none}
+.panel li{margin:0;padding:11px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.panel li:last-child{border-bottom:none}
+
+.note{margin-top:20px;padding:14px 18px;border-left:3px solid var(--accent2);
+  background:var(--accent2-soft);border-radius:6px;font-size:14.5px;
+  max-width:var(--measure)}
+.note.warn{border-left-color:var(--accent);background:var(--accent-soft)}
+
+.code-cap{margin-top:22px;font-size:12.5px;font-weight:600;color:var(--muted)}
+pre{margin-top:8px;padding:18px 20px;background:var(--dark);color:#E8E2D6;
+  border-radius:var(--radius);overflow-x:auto;font-size:13px;line-height:1.7}
+pre code{padding:0;background:none;color:inherit;font-size:inherit}
+
+.formula{margin-top:16px;padding:14px 18px;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--radius);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:13.5px;line-height:1.9;overflow-x:auto}
+
+.takeaway{margin-top:24px;padding:26px 30px;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--radius-lg)}
+.takeaway ul{margin:0;list-style:none}
+.takeaway li{position:relative;margin:0;padding:12px 0 12px 28px;
+  border-bottom:1px solid var(--line)}
+.takeaway li:last-child{border-bottom:none}
+.takeaway li::before{content:"";position:absolute;left:0;top:20px;
+  width:12px;height:12px;border-radius:3px;
+  background:var(--accent-soft);border:2px solid var(--accent)}
+
+@media (max-width:880px){
+  .grid.c2,.grid.c3,.panels{grid-template-columns:1fr}
+  .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .takeaway{padding:20px 18px}
+}
 /* == 组件层追加位置 == */
 </style>
 </head>
