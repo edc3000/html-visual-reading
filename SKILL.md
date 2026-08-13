@@ -27,7 +27,9 @@ description: 把内容做成可视化、卡片式、递进式阅读的单文件 
 
 body.html 的顶层结构固定是三块拼起来：`<header class="page-head container">` + `<nav class="nav">` + `<main class="container">`，直接首尾相接就是整份 body 文件，不含 `<html>`/`<head>`/`<body>` 标签——那些在骨架（`assets/skeleton-head.html` / `skeleton-tail.html`）里，build.sh 拼装时会自动包上。
 
-组件从 @assets/components.md 里挑，直接复制粘贴、按需改文字——样式已经在骨架里定义好，不要另加 `style=` 或 `<style>`。文字怎么写、怎么向外行读者拆解名词，见 @references/writing-style.md。
+组件从 @assets/components.md 里挑，直接复制粘贴、按需改文字——样式已经在骨架里定义好，不要另加 `style=` 或 `<style>`。
+
+文字怎么写见 @references/writing-style.md。其中三条最容易做错，先记住：**讲透"为什么这么做"而不只是"做了什么"**（页面的价值全在后者）；**只解释真正会拦住读者的名词**，望文生义的词一个都不要解释；**末尾不许加总结章**。
 
 **禁止写任何 inline JS**（`onclick=` 等事件属性）。所有交互都由骨架自带的脚本经 `data-*` 属性驱动，第 5 步的静态检查会拦截 inline JS 并让构建失败。
 
