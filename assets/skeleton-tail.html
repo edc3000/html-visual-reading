@@ -1,2 +1,66 @@
+<script>
+(function () {
+  function flowAction(btn) {
+    var flow = btn.closest('.flow');
+    if (!flow) return;
+    var nodes = flow.querySelectorAll('[data-step]');
+    var total = nodes.length;
+    var cur = parseInt(flow.getAttribute('data-cur') || '0', 10);
+    var act = btn.getAttribute('data-flow-action');
+    if (act === 'next') cur = Math.min(cur + 1, total);
+    if (act === 'prev') cur = Math.max(cur - 1, 0);
+    if (act === 'reset') cur = 0;
+    flow.setAttribute('data-cur', cur);
+
+    for (var i = 0; i < total; i++) {
+      nodes[i].classList.remove('on', 'done');
+      if (i < cur - 1) nodes[i].classList.add('done');
+      if (i === cur - 1) nodes[i].classList.add('on');
+    }
+
+    var cap = flow.querySelector('.flow-caption');
+    if (cap) {
+      cap.textContent = cur === 0
+        ? (cap.getAttribute('data-idle') || '')
+        : (nodes[cur - 1].getAttribute('data-caption') || '');
+    }
+    var prog = flow.querySelector('.flow-progress');
+    if (prog) prog.textContent = cur + ' / ' + total;
+  }
+
+  document.addEventListener('click', function (e) {
+    var head = e.target.closest ? e.target.closest('.expand-head') : null;
+    if (head) { head.parentElement.classList.toggle('on'); return; }
+
+    var toggle = e.target.closest('.fig-toggle');
+    if (toggle) {
+      var fig = toggle.closest('figure');
+      fig.classList.toggle('on');
+      toggle.textContent = fig.classList.contains('on')
+        ? '收起说明 ▴'
+        : '展开说明 ▸';
+      return;
+    }
+
+    var btn = e.target.closest('[data-flow-action]');
+    if (btn) flowAction(btn);
+  });
+
+  var sections = document.querySelectorAll('.section[id]');
+  var links = document.querySelectorAll('.nav a');
+  if (sections.length && links.length && 'IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var id = en.target.getAttribute('id');
+        links.forEach(function (a) {
+          a.classList.toggle('on', a.getAttribute('href') === '#' + id);
+        });
+      });
+    }, { rootMargin: '-64px 0px -70% 0px' });
+    sections.forEach(function (s) { io.observe(s); });
+  }
+})();
+</script>
 </body>
 </html>

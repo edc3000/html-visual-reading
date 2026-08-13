@@ -1,0 +1,18 @@
+.expand.on .expand-body{
+.flow-node.done{
+figure.on .fig-detail{
+.fig-toggle{
+data-flow-action
+function flowAction
+IntersectionObserver
+.expand-title{font-size:16px;font-weight:700;line-height:1.4;overflow-wrap:anywhere}
+.expand-summary{margin-top:4px;font-size:13.5px;color:var(--muted);line-height:1.6;overflow-wrap:anywhere}
+.flow-node-title{font-size:14.5px;font-weight:700;overflow-wrap:anywhere}
+.flow-node-desc{margin-top:4px;font-size:13.5px;color:var(--muted);overflow-wrap:anywhere}
+line-height:1.7;overflow-wrap:break-word}
+.fig-cap{margin-top:10px;font-size:13.5px;color:var(--muted);max-width:var(--measure);overflow-wrap:break-word}
+font-size:14.5px;overflow-wrap:break-word}
+.expand-body-inner p{margin-top:0;max-width:none;overflow-wrap:break-word}
+background:var(--accent);color:#fff;font-size:12px;font-weight:800;
+.flow-node.on{opacity:1;border-color:var(--accent);background:var(--accent)}
+color:var(--accent-ink);cursor:pointer;user-select:none}
