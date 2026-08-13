@@ -65,7 +65,7 @@
   </section>
 ```
 
-`.section-lead` 可省，`.section-num` 和 `h2` 必留；`section-num` 按章节顺序编号（`01`、`02`……）。
+`.section-lead` 可省，`.section-num` 和 `h2` 必留；`section-num` 按章节顺序编号（`01`、`02`……）。组件 5–14 的内容插入到 `<p class="section-lead">` 之后、`</section>` 之前——也就是先删掉这里的 `</section>`，接上若干个组件，最后再补回 `</section>`。
 
 ## 5. 概念卡网格
 
@@ -96,6 +96,8 @@
 
 什么时候用：量化结论——用几个关键数字给读者一个数量级感。
 
+约束：`.metrics` 是固定 4 列布局，指标数量最好凑够 4 个；少于 4 个桌面端右侧会留白（880px 以下断点自动转 2 列，不受影响）。
+
 ```html
     <div class="metrics">
       <div class="metric">
@@ -107,6 +109,16 @@
         <div class="metric-value">5.09M</div>
         <div class="metric-label">训练总行数</div>
         <div class="metric-note">逐行读完要不吃不喝三个月</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value">3</div>
+        <div class="metric-label">公开测试井</div>
+        <div class="metric-note">答题时只有这三口可参考</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value">0.5</div>
+        <div class="metric-label">分箱精度（英尺）</div>
+        <div class="metric-note">约一个成年人的小臂长度</div>
       </div>
     </div>
 ```
