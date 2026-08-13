@@ -39,6 +39,8 @@ bash <skill 目录>/scripts/build.sh <body.html> <out.html> "<标题>" "<描述>
 
 `build.sh` 已经内含两道工序，不用另外手动跑：先用 `inline_images.py` 把 body 里引用的图片全部内联成 `data:` URI，再用 `check.sh` 做静态检查。**检查不通过会以退出码 1 结束，并把问题逐条列在输出里**——照着列出的问题改 body，改完重新跑这条命令即可，不用单独调用 `check.sh`。
 
+`check.sh` 只拦资源属性（`src`/`srcset`/`link href`/CSS 里的 `url()`/`@import`），**不拦 `<a href="https://...">` 这类导航链接**——指向原文出处的链接是允许的，也是推荐的写法，正文里该署名、该链回原文时放心加。
+
 ## 不做的事
 
 - 不自动开浏览器
