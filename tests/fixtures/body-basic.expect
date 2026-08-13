@@ -1,7 +1,0 @@
---accent:#CC6A3D
---accent-ink:#94441F
---container:1120px
-@media (max-width:880px)
-.keypoint{
-.nav a.on{
-.section-num{

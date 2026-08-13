@@ -1,56 +1,36 @@
 # html-visual-reading
 
-Claude Code skill：把内容（本地文件、项目文件夹、URL，或当前对话的产出）做成一个**单文件、卡片式、由浅入深**的可视化 HTML 页面，面向对该领域完全外行的读者。
+Claude Code skill：把一篇 blog / paper / survey / 长文，或一整个工程项目，转成**单文件、自包含、适合阅读**的教学可视化 HTML。
 
-Skill 的完整流程写在 [`SKILL.md`](SKILL.md)：接住输入 → 盘素材（先找现成图,再考虑自制）→ 排阅读路径（产出大纲后停下来等确认）→ 写 body（挑组件、按写作规则拆解名词）→ 拼装（`build.sh` 一条命令内联图片 + 静态检查）。
+核心原则是**帮助读者 get 到材料的核心思想**——页面首先要流畅易读，可视化只是让抽象关系更具体，卡片只是让读者在掌握脉络后自然深入细节。默认读者是熟悉 LLM 的后训练工程师。
+
+完整流程写在 [`SKILL.md`](SKILL.md)：取材 → 定契约（**停下来等确认**）→ 设计阅读路径 → 选可视化手段 → 写页面 → 验证 → 交付。
 
 ## 目录结构
 
 ```
-SKILL.md                        skill 入口，五步流程 + frontmatter 触发词
-README.md                       本文件
+SKILL.md                  skill 入口：硬约束、读者画像、七步流程、frontmatter 触发词
+README.md                 本文件
 references/
-  ingest.md                     四种输入的具体读取方法 + 完整取图规范
-  outline.md                    大纲模板与三条硬规则
-  writing-style.md              写作规则，每条配正反例
-assets/
-  skeleton-head.html            页面骨架的 <head>（含全部 CSS token 与样式）
-  skeleton-tail.html            页面骨架的收尾脚本（折叠/流程图/导航交互）
-  components.md                 可直接复制粘贴的 HTML 组件片段速查
-scripts/
-  build.sh                      拼装脚本：head + body + tail → 内联图片 → 静态检查
-  inline_images.py              把 <img src="..."> 全部转成内联 data: URI
-  check.sh                      产出物的静态校验（外链、禁用词、标签配对、重复 id、inline JS）
-tests/
-  test_build.sh / test_check.sh / test_render.sh / test_inline_images.py
-  fixtures/                     测试用的 body 片段与期望产物
+  contracts.md            五份契约（读者/术语/数据流/running example/主线）+ section 硬规则
+  ingest.md               四种输入的取材方法 + 完整图片规范（取图、arXiv、内联、说明格式）
+  visual-patterns.md      pattern 库、流程图契约、视觉与交互规范、实现陷阱
+  writing-style.md        中文行文规范，每条配正反例
+  paper.md                单篇论文专项：元信息标注、叙事主线、篇幅分配
+  survey.md               综述专项：taxonomy、递归展开、sub-agent 并行调研
+  project.md              工程项目专项：模块图、运行流程、设计取舍的素材来源
+  verify.md               四层验证清单，含可直接运行的 Playwright 检查脚本
+  anti-patterns.md        40 条反面教训，写前扫一遍、验证时再扫一遍
 ```
 
-## 手动跑 build.sh
+没有构建脚本，也没有固定骨架——页面按 `visual-patterns.md` 的规范现写，CSS/JS 全部内联，产物是一个可以直接双击打开或分享的 HTML 文件。
 
-```bash
-bash scripts/build.sh <body.html> <out.html> "<标题>" "<描述>"
-```
+## 三条不随材料变化的硬约束
 
-- `body.html`：只含 `<main class="container">...</main>` 之类的正文片段（不含 `<html>`/`<head>`），组件从 `assets/components.md` 挑。
-- `out.html`：产出的单文件 HTML，图片已内联，可以直接双击打开或分享。
-- `build.sh` 内部顺序：拼接骨架（`assets/skeleton-head.html` + body + `assets/skeleton-tail.html`）→ 替换标题/描述占位符 → 用 `scripts/inline_images.py` 把图片转成 `data:` URI → 用 `scripts/check.sh` 做静态检查。
-- 检查不通过时，`build.sh` 以退出码 `1` 结束，并把每一项问题打印出来；修完 body 里的问题后重新跑同一条命令即可。
+- **单文件、零外部请求**：CSS/JS 内联，图标用 emoji 或内联 SVG，字体走字体栈不引 CDN，本地图片 base64 内联
+- **中文**：正文/导航/按钮一律中文，只有专有名词、代码、需要原味的金句保留英文
+- **源链接显式引用**：页头和页脚各出现一次，链回原文或原仓库
 
-也可以单独跑内联脚本或检查脚本：
+## 验证
 
-```bash
-python3 scripts/inline_images.py <in.html> <out.html> --base-dir <图片相对路径的基准目录>
-bash scripts/check.sh <out.html>
-```
-
-## 跑测试
-
-```bash
-bash tests/test_build.sh
-bash tests/test_check.sh
-bash tests/test_render.sh
-python3 tests/test_inline_images.py
-```
-
-四个测试分别覆盖：`build.sh` 的拼装与占位符替换、`check.sh` 的静态校验规则（含多个对抗性用例）、骨架片段拼出的完整页面渲染是否符合预期、`inline_images.py` 的图片内联逻辑。
+产物写完后跑 [`references/verify.md`](references/verify.md) 里的四层检查。运行时那层可以自动跑——本机装了 Playwright + Chromium，脚本会在 375 / 880 / 1440 三档宽度下展开所有可交互元素，一次覆盖 Console 报错、外部请求、加载失败的资源和横向溢出。
