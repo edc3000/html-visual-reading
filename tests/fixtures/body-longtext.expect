@@ -2,3 +2,21 @@ h1{font-size:clamp(30px,5vw,46px);line-height:1.16;font-weight:800;letter-spacin
 .page-sub{margin-top:18px;font-size:18px;color:var(--muted);max-width:var(--measure);overflow-wrap:break-word}
 .section-lead{margin-top:14px;font-size:16px;color:var(--muted);max-width:var(--measure);overflow-wrap:break-word}
 .section p{margin-top:16px;max-width:var(--measure);overflow-wrap:break-word}
+.concept{background:var(--surface);border:1px solid var(--line);
+  border-left:4px solid var(--accent);border-radius:var(--radius);padding:18px 20px;min-width:0}
+.concept .term{margin-top:3px;font-size:12px;color:var(--muted);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:break-word}
+.concept .analogy{margin-top:11px;padding-top:11px;border-top:1px dashed var(--line);
+  font-size:14px;color:var(--muted);overflow-wrap:break-word}
+.metric{background:var(--surface);border:1px solid var(--line);
+  border-top:3px solid var(--accent);border-radius:var(--radius);
+  padding:16px 14px;text-align:center;min-width:0}
+.metric-note{margin-top:5px;font-size:12px;color:var(--muted);line-height:1.5;overflow-wrap:break-word}
+.panel{background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius);padding:20px 22px;min-width:0}
+.panel-title{display:flex;align-items:center;gap:8px;font-size:15px;
+  font-weight:700;margin-bottom:6px;overflow-wrap:break-word}
+.note{margin-top:20px;padding:14px 18px;border-left:3px solid var(--accent2);
+  background:var(--accent2-soft);border-radius:6px;font-size:14.5px;
+  max-width:var(--measure);overflow-wrap:break-word}
+.code-cap{margin-top:22px;font-size:12.5px;font-weight:600;color:var(--muted);overflow-wrap:break-word}

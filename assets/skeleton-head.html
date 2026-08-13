@@ -80,42 +80,43 @@ h1{font-size:clamp(30px,5vw,46px);line-height:1.16;font-weight:800;letter-spacin
 .grid.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .grid.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .concept{background:var(--surface);border:1px solid var(--line);
-  border-left:4px solid var(--accent);border-radius:var(--radius);padding:18px 20px}
+  border-left:4px solid var(--accent);border-radius:var(--radius);padding:18px 20px;min-width:0}
+/* 假设 .grid 内只放同类卡片；非同类混搭会破坏奇偶交替效果 */
 .concept:nth-child(2n){border-left-color:var(--accent2)}
 .concept h3{margin:0;font-size:16px;font-weight:700;line-height:1.4}
 .concept .term{margin-top:3px;font-size:12px;color:var(--muted);
-  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:break-word}
 .concept p{margin-top:9px;max-width:none;font-size:14.5px;color:#55524C}
 .concept .analogy{margin-top:11px;padding-top:11px;border-top:1px dashed var(--line);
-  font-size:14px;color:var(--muted)}
+  font-size:14px;color:var(--muted);overflow-wrap:break-word}
 
 .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:24px}
 .metric{background:var(--surface);border:1px solid var(--line);
   border-top:3px solid var(--accent);border-radius:var(--radius);
-  padding:16px 14px;text-align:center}
+  padding:16px 14px;text-align:center;min-width:0}
 .metric-value{font-size:24px;font-weight:800;color:var(--accent);line-height:1.2;
   font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 .metric-label{margin-top:6px;font-size:12.5px;color:var(--muted)}
-.metric-note{margin-top:5px;font-size:12px;color:#8B857C;line-height:1.5}
+.metric-note{margin-top:5px;font-size:12px;color:var(--muted);line-height:1.5;overflow-wrap:break-word}
 
 .panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:24px}
 .panel{background:var(--surface);border:1px solid var(--line);
-  border-radius:var(--radius);padding:20px 22px}
+  border-radius:var(--radius);padding:20px 22px;min-width:0}
 .panel-title{display:flex;align-items:center;gap:8px;font-size:15px;
-  font-weight:700;margin-bottom:6px}
+  font-weight:700;margin-bottom:6px;overflow-wrap:break-word}
 .panel-title .dot{width:8px;height:8px;border-radius:50%;background:currentColor}
 .panel.good .panel-title{color:var(--accent2)}
-.panel.bad .panel-title{color:var(--accent)}
+.panel.bad .panel-title{color:var(--accent-ink)}
 .panel ul{margin:0;list-style:none}
 .panel li{margin:0;padding:11px 0;border-bottom:1px solid var(--line);font-size:14.5px}
 .panel li:last-child{border-bottom:none}
 
 .note{margin-top:20px;padding:14px 18px;border-left:3px solid var(--accent2);
   background:var(--accent2-soft);border-radius:6px;font-size:14.5px;
-  max-width:var(--measure)}
+  max-width:var(--measure);overflow-wrap:break-word}
 .note.warn{border-left-color:var(--accent);background:var(--accent-soft)}
 
-.code-cap{margin-top:22px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.code-cap{margin-top:22px;font-size:12.5px;font-weight:600;color:var(--muted);overflow-wrap:break-word}
 pre{margin-top:8px;padding:18px 20px;background:var(--dark);color:#E8E2D6;
   border-radius:var(--radius);overflow-x:auto;font-size:13px;line-height:1.7}
 pre code{padding:0;background:none;color:inherit;font-size:inherit}
