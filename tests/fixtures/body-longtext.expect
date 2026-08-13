@@ -1,3 +1,6 @@
+.tag{padding:5px 11px;border-radius:100px;font-size:12px;font-weight:600;
+  background:var(--accent-soft);color:var(--accent-ink);overflow-wrap:anywhere}
+.page-meta span{overflow-wrap:anywhere}
 h1{font-size:clamp(30px,5vw,46px);line-height:1.16;font-weight:800;letter-spacing:-.02em;overflow-wrap:break-word}
 .page-sub{margin-top:18px;font-size:18px;color:var(--muted);max-width:var(--measure);overflow-wrap:break-word}
 .section-lead{margin-top:14px;font-size:16px;color:var(--muted);max-width:var(--measure);overflow-wrap:break-word}
