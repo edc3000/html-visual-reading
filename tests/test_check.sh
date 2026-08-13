@@ -6,6 +6,23 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 fail() { echo "FAIL: $1"; exit 1; }
 
+# 断言 check.sh 真的拦下了问题（退出码非 0），而不是脚本内部崩了个非零退出码
+# 冒充"拦住了"——比如变量插值遇到相邻的中文标点导致的 "unbound variable"
+# 这类 bash 内部错误，退出码同样非 0，光看退出码测不出来。
+assert_rejected() {
+  local file="$1" desc="$2"
+  local out rc
+  out="$(bash "$ROOT/scripts/check.sh" "$file" 2>&1)"; rc=$?
+  [ "$rc" -ne 0 ] || fail "$desc：未被拦截"
+  case "$out" in
+    *"unbound variable"*) fail "$desc：check.sh 内部报错退出（$out），不是正常拦截" ;;
+  esac
+  case "$out" in
+    *"✗"*) ;;
+    *) fail "$desc：退出码非 0 但输出里没有 ✗ 问题行，怀疑是内部报错——$out" ;;
+  esac
+}
+
 good() {
   cat > "$TMP/$1" <<'EOF'
 <!doctype html>
@@ -140,5 +157,77 @@ EOF
 if bash "$ROOT/scripts/check.sh" "$TMP/srcset_ext.html" >/dev/null 2>&1; then
   fail "srcset 真外部图片未被拦截"
 fi
+
+# 11. C1：本地相对路径 img（未被内联）必须被拦
+cat > "$TMP/img_relative.html" <<'EOF'
+<!doctype html>
+<html lang="zh-CN"><head><title>页面</title></head>
+<body><main><img src="docs/img/arch.png" alt="架构图"></main><script>var x=1;</script></body></html>
+EOF
+assert_rejected "$TMP/img_relative.html" "本地相对路径 img（未内联）"
+
+# 12. C1：本地绝对路径 img（未被内联）必须被拦
+cat > "$TMP/img_absolute.html" <<'EOF'
+<!doctype html>
+<html lang="zh-CN"><head><title>页面</title></head>
+<body><main><img src="/Users/x/project/docs/img/arch.png" alt="架构图"></main><script>var x=1;</script></body></html>
+EOF
+assert_rejected "$TMP/img_absolute.html" "本地绝对路径 img（未内联）"
+
+# 13. C1：data URI 的 img 必须放行（必须通过）
+cat > "$TMP/img_data_uri.html" <<'EOF'
+<!doctype html>
+<html lang="zh-CN"><head><title>页面</title></head>
+<body><main><img src="data:image/png;base64,AAAA" alt="架构图"></main><script>var x=1;</script></body></html>
+EOF
+bash "$ROOT/scripts/check.sh" "$TMP/img_data_uri.html" >/dev/null 2>&1 || fail "data URI img 被误拦"
+
+# 14. I4：代码块里的 "online = True" 不应被误判为 inline JS 事件属性（必须通过）
+cat > "$TMP/false_positive_online.html" <<'EOF'
+<!doctype html>
+<html lang="zh-CN"><head><title>页面</title></head>
+<body><main><pre><code>online = True</code></pre></main><script>var x=1;</script></body></html>
+EOF
+bash "$ROOT/scripts/check.sh" "$TMP/false_positive_online.html" >/dev/null 2>&1 || fail "正文 online = True 被误判为 inline JS 事件属性"
+
+# 15. I4：正文提到「把参数 once=true 传进去」不应被误判为 inline JS 事件属性（必须通过）
+cat > "$TMP/false_positive_once.html" <<'EOF'
+<!doctype html>
+<html lang="zh-CN"><head><title>页面</title></head>
+<body><main><p>把参数 once=true 传进去</p></main><script>var x=1;</script></body></html>
+EOF
+bash "$ROOT/scripts/check.sh" "$TMP/false_positive_once.html" >/dev/null 2>&1 || fail "正文 once=true 被误判为 inline JS 事件属性"
+
+# 16. I4：正文提到「CSS 里的 @import 会引入外部样式表」不应被误判（必须通过）
+cat > "$TMP/false_positive_import.html" <<'EOF'
+<!doctype html>
+<html lang="zh-CN"><head><title>页面</title></head>
+<body><main><p>CSS 里的 <code>@import</code> 会引入外部样式表</p></main><script>var x=1;</script></body></html>
+EOF
+bash "$ROOT/scripts/check.sh" "$TMP/false_positive_import.html" >/dev/null 2>&1 || fail "正文提及 @import 被误判为 CSS 中存在 @import"
+
+# 17. I4：收紧后，<style> 内真实的 @import 仍必须被拦（回归）
+cat > "$TMP/real_import.html" <<'EOF'
+<!doctype html>
+<html lang="zh-CN"><head><title>页面</title><style>@import url(https://evil.example.com/x.css);</style></head>
+<body><main></main><script>var x=1;</script></body></html>
+EOF
+assert_rejected "$TMP/real_import.html" "<style> 内真实 @import"
+
+# 18. I4：收紧后，onclick 真实事件属性仍必须被拦（回归）
+cat > "$TMP/real_onclick.html" <<'EOF'
+<!doctype html>
+<html lang="zh-CN"><head><title>页面</title></head>
+<body><main><button onclick="x()">按钮</button></main><script>var x=1;</script></body></html>
+EOF
+assert_rejected "$TMP/real_onclick.html" "onclick 真实事件属性"
+
+# 19. I4：收紧后，onerror 真实事件属性仍必须被拦（回归）
+cat > "$TMP/real_onerror.html" <<'EOF'
+<!doctype html>
+<html lang="zh-CN"><head><title>页面</title></head>
+<body><main><img src="data:image/png;base64,AAAA" onerror="y()"></main><script>var x=1;</script></body></html>
+EOF
+assert_rejected "$TMP/real_onerror.html" "onerror 真实事件属性"
 
 echo "PASS test_check"
