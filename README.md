@@ -39,7 +39,7 @@
 
 ### 安装
 
-没有依赖、没有构建，把目录放进 skills 目录就行。
+没有依赖、没有构建，clone 到 skills 目录就行。
 
 <table>
 <tr><th>全局启用（所有项目可用）</th><th>只在当前项目启用</th></tr>
@@ -48,8 +48,8 @@
 
 ```bash
 mkdir -p ~/.claude/skills
-cp -r html-visual-reading \
-  ~/.claude/skills/
+git clone https://github.com/edc3000/html-visual-reading \
+  ~/.claude/skills/html-visual-reading
 ```
 
 </td>
@@ -57,13 +57,15 @@ cp -r html-visual-reading \
 
 ```bash
 mkdir -p .claude/skills
-cp -r <路径>/html-visual-reading \
-  .claude/skills/
+git clone https://github.com/edc3000/html-visual-reading \
+  .claude/skills/html-visual-reading
 ```
 
 </td>
 </tr>
 </table>
+
+更新：`git -C ~/.claude/skills/html-visual-reading pull`
 
 ### 调用
 
