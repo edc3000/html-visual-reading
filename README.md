@@ -11,6 +11,7 @@
 [![Output](https://img.shields.io/badge/产物-单个%20HTML-1a1816?style=flat-square)](#三条不随材料变化的硬约束)
 [![Requests](https://img.shields.io/badge/外部请求-0-2ea44f?style=flat-square)](#三条不随材料变化的硬约束)
 [![Build](https://img.shields.io/badge/构建步骤-无-cc6a3d?style=flat-square)](#环境要求)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](./LICENSE)
 
 [快速开始](#60-秒上手) · [它长什么样](#它长什么样) · [七步流程](#七步流程) · [三条专项路线](#三条专项路线) · [验证](#四层验证) · [FAQ](#faq)
 
@@ -439,6 +440,14 @@ flowchart LR
 「先让读者读懂、可视化只是辅助」这条主张，以及渐进式披露的整体思路，都来自那份原始命令。本仓库在它之上补了五份契约的确认环节、工程项目专项、四层验证清单和 40 条反面教训。
 
 感谢原作者把这套方法公开出来。
+
+---
+
+## 许可
+
+[MIT](./LICENSE)
+
+> 原始的 `blog-to-html` 所在仓库 `syt-nju/my_cursor` 未附带 license，本仓库的 MIT 只覆盖本仓库自身的内容。如果你要在商业场景里分发本仓库，建议先与原作者确认。
 
 ---
 
