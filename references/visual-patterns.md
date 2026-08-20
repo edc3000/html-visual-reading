@@ -18,7 +18,7 @@
 | 引用高亮块 | 带装饰的引用 | 保留原作者的金句 |
 | 决策框 | 是/否分支或矩阵 | 「该不该用」这类判断题 |
 | 对比表格 | 维度 × 方案 | 多方案横评 |
-| 代码 / 公式片段 | 带语法高亮 | 技术细节 |
+| 代码片段 / LaTeX 公式 | 代码高亮 / 数学排版 | 技术细节与定量关系 |
 
 **交互流程图 ≠ 步进动画**：前者是点击节点切换状态，后者是按钮驱动的线性推进。
 
@@ -91,6 +91,78 @@ font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;  
 - 正文行宽控制在 `max-width: 760px` 左右，容器 `1120px`；行宽超过 900px 后长段落会明显难读
 - 段落包含 ≥3 个并列要点时，改为 `<ul>` 分点列表，每项核心关键词 `<strong>` 加粗
 - 避免连续超过 4 行无加粗、无分点的纯文字段落；出现时要么拆分点、要么对关键概念加粗建立视觉锚点。**大段灰色文字墙是可读性的敌人**
+
+## 公式：LaTeX 渲染，正文等大
+
+公式承担的是关系说明，不是标题或 metric。**先写 LaTeX，再把它渲染成数学排版；公式中的普通变量字级与正文 `1em` 一致。** 分式、上下标和多行公式自然会占更高的行盒，但其中字母本身不应比正文更大。
+
+### 渲染路径
+
+1. **LaTeX 是源**：保留每条公式的 LaTeX 字符串，不能把 `a/(v+u)`、`p_theta` 之类等宽纯文本当作最终呈现。
+2. **优先在写页面时渲染**：有 `latex` 与 `dvisvgm` 时，运行 `<skill-dir>/scripts/render_latex.py`，生成无字体依赖、由 path 组成的 SVG，再把 SVG 内容直接内联进 HTML。
+3. **工具链不可用时**：把同一份 LaTeX 转成原生 MathML；仍要保留 LaTeX 源，例如写入 `data-tex`。不要用斜体字体、手写上下标或 CSS 拼分数冒充公式渲染。
+4. **运行时零依赖**：页面不能从 CDN 请求 KaTeX、MathJax、CSS 或数学字体。只有当库、样式和字体都已完整内联时，才可使用 KaTeX / MathJax。
+5. **可访问性**：公式容器加 `data-formula`；SVG 保留 `data-tex`，并提供能说明公式含义的 `aria-label`。装饰性重复公式才使用空 label。
+
+本地渲染示例：
+
+```bash
+python3 <skill-dir>/scripts/render_latex.py \
+  --tex '\frac{a}{v+u}+\frac{b}{v-u}=T_1' \
+  --label '两段航程的时间之和等于 T1' \
+  --output /tmp/boat-equation.svg
+```
+
+把输出文件中的 `<svg>…</svg>` 放进公式容器，不要作为远程图片引用。
+
+### 字号与长公式
+
+- 公式容器固定 `font-size: 1em`，继承正文颜色。**不要用 `width: 500px`、`width: 80%` 或 `transform: scale()` 决定公式字级**；同一宽度下，短公式会被异常放大，长公式又会被压小。
+- 单行公式通过 SVG 的 `height`（单位 `em`）对齐正文；多行公式按实际行数设置 `--formula-lines`，或者每行单独渲染后纵向排列。
+- 公式超过正文列宽时保持正文级字级，允许横向滚动或在语义边界断行。不要为了塞进容器而整体缩小。
+- 行内公式与基线对齐；块级公式只用留白和浅色底区分，不额外放大。
+
+推荐约定：
+
+```html
+<span class="formula-inline" data-formula><!-- 内联 SVG / MathML --></span>
+
+<div class="formula-display" data-formula style="--formula-lines: 3">
+  <!-- 三行公式的内联 SVG / MathML -->
+</div>
+```
+
+```css
+.formula-inline,
+.formula-display,
+math,
+.katex {
+  font-size: 1em;
+  color: inherit;
+}
+.formula-inline {
+  display: inline-flex;
+  vertical-align: -0.18em;
+}
+.formula-inline > svg {
+  width: auto;
+  height: 1.15em;
+}
+.formula-display {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  padding: 0.75em 1em;
+}
+.formula-display > svg {
+  width: auto;
+  max-width: none;
+  height: calc(var(--formula-lines, 1) * 1.45em);
+  flex: 0 0 auto;
+}
+```
+
+`1.15em` 与 `1.45em` 是稳定起点，不是必须逐公式放大的理由。最终判断以截图为准：普通变量的字高应与相邻正文接近，公式不能成为一屏里最大的视觉元素。
 
 ## 交互与动效
 

@@ -43,6 +43,27 @@ rg -n '契约|读者画像|承重墙|渐进披露|视觉锚点|折叠态|主线'
 
 这些词属于流程内部，或者本身就是凭空抽象出来的，都不该出现在页面上。每条命中回原材料查一次：材料本身在用这个词就保留，材料没用就改写成材料自己的说法（真实案例：把项目的 SKILL.md 标成「Skill 契约与参考规则」，原材料从没这么叫过）。
 
+### LaTeX 公式与字号
+
+先列出全部公式载体：
+
+```bash
+rg -n 'data-formula|data-tex|<math|class="[^"]*(katex|formula)' <file>
+```
+
+逐条确认：
+
+- 数学关系来自 LaTeX，并已渲染成 MathML、内联路径 SVG，或完整内联的 KaTeX / MathJax 输出；不能把等宽纯文本当公式。
+- 每个公式容器都有 `data-formula`，源 LaTeX 保存在 `data-tex` 或等价位置；SVG 有准确的 `aria-label`。
+- 公式容器的 `font-size` 是 `1em`。SVG 字级由 `height: …em` 控制；不以固定 `px`、百分比 `width` 或 `transform: scale()` 放大缩小。
+- 多行公式的 `--formula-lines` 与实际行数一致。长公式保持正文级字号，通过横向滚动或语义断行适配窄屏。
+
+下面的命中通常表示公式 SVG 正在按宽度缩放，需要人工检查并改成 `em` 高度：
+
+```bash
+rg -n -U '(?s)(formula|latex|math)[^{}]*>\s*svg\s*\{[^}]{0,500}(width|transform)\s*:\s*[^;]*(px|%|scale)' <file>
+```
+
 ### DOM id 唯一性
 
 ```bash
@@ -106,6 +127,25 @@ with sync_playwright() as p:
             except Exception:
                 pass
         page.wait_for_timeout(400)
+        formula_size_errors = page.evaluate(
+            """() => {
+              return [...document.querySelectorAll('[data-formula]')]
+                .map((el, index) => ({
+                  index,
+                  size: parseFloat(getComputedStyle(el).fontSize),
+                  surroundingSize: parseFloat(
+                    getComputedStyle(el.parentElement || document.body).fontSize
+                  ),
+                  tex: el.dataset.tex || el.querySelector('[data-tex]')?.dataset.tex || ''
+                }))
+                .filter(item => Math.abs(item.size - item.surroundingSize) > 0.5);
+            }"""
+        )
+        for item in formula_size_errors:
+            problems.append(
+                f"[公式字号] {w}px 下公式 #{item['index']} 为 {item['size']}px，"
+                f"相邻正文为 {item['surroundingSize']}px；TeX={item['tex'][:80]}"
+            )
         sw = page.evaluate("document.documentElement.scrollWidth")
         if sw > w + 1:
             bad = page.evaluate(
@@ -126,6 +166,8 @@ sys.exit(1 if problems else 0)
 - 视觉层级对不对、配色是不是太跳、留白够不够
 - 步进动画每一步的文案是不是对得上状态
 - 图有没有被压扁、小字有没有糊
+- 普通公式变量的字高是否接近相邻正文；分式可以更高，但公式不能像标题或 metric 一样抢占视觉层级
+- 长公式在 375px 下是断行或可横向滚动，而不是被整体压小
 
 所以脚本跑完还要 `open <file>` 自己看一眼，并把结果如实报告给用户。**本机没有 Playwright 时，这一层退化成：让用户开浏览器按 F12 看 Console，并明确告诉用户你没能自动验证。不要假装跑过。**
 

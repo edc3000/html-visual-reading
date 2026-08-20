@@ -27,6 +27,7 @@ description: 把 blog、论文、综述、网页或一整个工程项目转成�
 这几条不随材料变化，先记住：
 
 - **单文件、零外部请求**。CSS 和 JS 全部内联；图标用 emoji 或内联 SVG；字体用字体栈（`Inter, "Noto Sans SC", -apple-system, "PingFang SC", system-ui, sans-serif`），本机有就用、没有就退回系统字体，**不引 CDN**。本地图片 base64 内联，远程图片按 @references/ingest.md 的规则校验后直引 URL。
+- **公式使用 LaTeX 排版，字级与正文一致**。以 LaTeX 为公式源，写页面前渲染为自包含的 MathML 或路径化 SVG；普通公式的字级继承正文 `1em`，长公式横向滚动或合理断行，不靠放大字号制造视觉重点。实现方式与 CSS 约定见 @references/visual-patterns.md。
 - **中文**。正文 / 标题 / 导航 / 按钮 / 提示文案一律中文，原文是英文时要翻译，**禁止整页堆英文**。仅这几种情况保留英文原文：专有名词（人名、公司、产品、论文标题）、代码 / 命令 / API、需要原汁原味的金句引用（此时配中文译文或简短解释）。
 - **不出现「TL;DR」这个字面词**。三层渐进披露的结构照用，但第一层叫「核心结论」或直接写成一句话判断，不叫 TL;DR。
 - **源链接必须显式引用**。输入提供了原文 URL（或文内可提取到权威源链接）时：页头或核心结论附近放一个「阅读原文 ↗」，页脚再出现一次并附作者 / 站点名。文中引用的其他外链资源也保留跳转。项目场景同理——链回仓库地址。参考样式：[anthropic-multi-agent-research-system](https://syt-nju.github.io/files/visual-reading/anthropic-multi-agent-research-system/)。
