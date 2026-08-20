@@ -10,6 +10,49 @@
 - **发表 venue**：发表在顶会/顶刊（NeurIPS、ICML、ICLR、ACL、EMNLP、AAAI、CVPR、TPAMI、Nature、Science 等）的，明确标注年份+会议/期刊名（如 `NeurIPS'23`、`ICML'25`）。仅挂 arXiv 未正式发表的标注 `arXiv preprint`
 - **被引论文同理**：在深度卡片或引用论文的折叠态中标注 venue 和年份，帮读者快速判断权威性和时效性
 
+## 训练与评测数据（强制）
+
+每篇单篇论文页都要有一个**默认展开**的「训练与评测数据」区域。数据决定结果能否与同方向论文比较，它属于实验结论的必要上下文，不能藏在折叠卡片里，也不能只写一句「在多个 benchmark 上评测」。
+
+先从原文整理所有真正参与本文训练、选型和结论的数据：
+
+- **训练数据**：本文实际用来更新参数的数据集、版本、子集、过滤规则和规模。SFT、RL、蒸馏、偏好优化等阶段分别列行；基础模型原始预训练语料只有在本文继续使用或它直接影响论证时才列。
+- **验证 / 选型数据**：用于调超参、early stopping、选择 checkpoint、选择 prompt / policy / 方法变体的数据。说明验证分数只是选型，还是样本、错误、轨迹也回流进训练。
+- **测试 / 最终评测数据**：支撑页面结论的每个 benchmark、年份 / 版本和 split。`data-dataset-role="test"` 表示它在跨论文表格中承担最终评测角色；页面显示仍保留作者的原名，例如「Held-out validation（本文最终评测）」而不是擅自改名。
+- **评测协议**：样本 / 题目数、metric、每题 generation 数、pass@k / majority vote、decoding 设置和 checkpoint 选择规则，只记录原文确实报告的内容。
+- **污染与重叠**：论文讨论去重、数据污染、train–test overlap 或同源数据时，紧跟数据表说明；未讨论就不替作者推断。
+
+页面使用稳定字段，方便读者横向比较：
+
+| 角色 | 数据集 / 版本 / split | 规模与子集 | 在流程中做什么 | 更新 / 选型边界 | metric / 生成协议 |
+|---|---|---|---|---|---|
+| Train | `<name>` | `<N / subset / filter>` | `<SFT / RL / distill…>` | `<更新哪些参数>` | `—` |
+| Validation | `<name or 未使用>` | `<N>` | `<调参 / 选 checkpoint>` | `<什么信息回流>` | `<selection metric>` |
+| Test | `<benchmark + year/version + split>` | `<N>` | `<最终评测>` | `<是否用于选 checkpoint；是否独立>` | `<metric + K + decoding>` |
+
+HTML 外层加 `data-data-interface`，每个角色行加稳定标记：
+
+```html
+<section data-data-interface>
+  <table>
+    <tbody>
+      <tr data-dataset-role="train">…</tr>
+      <tr data-dataset-role="validation">…</tr>
+      <tr data-dataset-role="test">…</tr>
+    </tbody>
+  </table>
+</section>
+```
+
+缺失信息也要占位：
+
+- 论文没有训练过程：Train 写「不适用：本文不更新模型参数」。
+- 没有独立验证集：Validation 写「未使用独立验证集」，并说明 checkpoint 如何确定。
+- 原文没给规模、过滤或 decoding：对应格写「论文未披露」，不要留空，也不要根据常识补数字。
+- 一个角色有多个数据集：每个数据集单独一行；benchmark 很多时可按同一套评测协议分组，但名称、版本和 split 不能省略。
+
+完成标准：读者只看这个区域，就能回答「模型用什么数据学、用什么数据选、最终在哪些数据上报分，以及评测信息有没有回流」。
+
 ## 叙事主线
 
 ```text
@@ -51,6 +94,8 @@
 ### 5. 实验结论（轻量）
 
 **不要逐表逐图搬运数字。** 用 1–2 句话概括「在哪些 benchmark 上比谁强多少」，或者用一张 metric card 呈现最核心的数字即可。
+
+先放上面的「训练与评测数据」区域，再展示结果。数据表是在界定证据，和搬运大段实验数字不是一回事。
 
 - 论文自己提到了 limitations / failure cases 且说得有道理的，也值得一两句话带出来——这往往比数字更能帮读者判断这个方法适不适合自己的场景
 - 论文给了**定性示例**（生成结果对比图、case study、可视化对比）的，挑最能说明方法优劣的 1–2 个嵌入，比干巴巴的数字更直观

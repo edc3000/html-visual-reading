@@ -64,6 +64,21 @@ rg -n 'data-formula|data-tex|<math|class="[^"]*(katex|formula)' <file>
 rg -n -U '(?s)(formula|latex|math)[^{}]*>\s*svg\s*\{[^}]{0,500}(width|transform)\s*:\s*[^;]*(px|%|scale)' <file>
 ```
 
+### 单篇论文的数据台账
+
+单篇论文页必须恰好有一个默认展开的 `data-data-interface`，且三种角色都出现：
+
+```bash
+rg -n 'data-data-interface|data-dataset-role=' <file>
+interface_count=$(rg -o 'data-data-interface' <file> | wc -l | tr -d ' ')
+[ "$interface_count" -eq 1 ] || echo "data-data-interface 应为 1，实际为 $interface_count"
+for role in train validation test; do
+  rg -q "data-dataset-role=\"$role\"" <file> || echo "缺少 $role"
+done
+```
+
+检查每一行都有数据集名称或明确的「不适用 / 未使用 / 论文未披露」，不能用空单元格绕过。多个测试 benchmark 要逐一保留名称、年份 / 版本与 split。
+
 ### DOM id 唯一性
 
 ```bash
@@ -179,6 +194,8 @@ sys.exit(1 if problems else 0)
 
 - **核心数字与原文对齐**（别幻觉）
 - **所有外链 URL 正确**，源链接指向真正的原文
+- **单篇论文的数据台账完整**：训练数据、验证 / 选型数据、最终评测数据默认可见；名称、版本 / split、规模、用途、反馈边界和协议均与原文一致，缺失信息明确标为「论文未披露」
+- 页面展示的每个核心实验结论都能追溯到数据台账中的 Test 行；用于选 checkpoint 的 benchmark 不得被写成完全独立的最终测试
 - 页头的核心结论真的能让目标读者 30 秒抓住核心思想
 - **把全部标题抽出来连读**（`rg -o '<h[123][^>]*>[^<]*' <file>`）：应该像目录，不像语录合集。同一句式（「A 不等于 B」「先 A 再 B」「把 A 变成 B」）出现两次以上，或标题里有材料中不存在的抽象名词（如「事实容器」「过程纪律」），逐个改成带材料专属名词的平实短语
 - section 顺序读起来顺滑，能自然从主旨走到细节

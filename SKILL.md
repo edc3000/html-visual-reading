@@ -15,7 +15,7 @@ description: 把 blog、论文、综述、网页或一整个工程项目转成�
 
 | 输入 | 典型场景 | 走哪条专项 |
 |---|---|---|
-| URL / markdown 路径 / 粘贴文本 | 一篇 blog、一篇论文 | @references/paper.md（论文）／通用流程（blog） |
+| URL / markdown 路径 / 粘贴文本 | 一篇 blog、一篇论文 | @references/paper.md（论文，含训练 / 验证 / 测试数据台账）／通用流程（blog） |
 | arXiv 论文，标题含 survey / review / overview | 综述 | @references/survey.md |
 | 本地文件夹（代码仓库、工程项目、skill 目录） | 「把这个项目讲清楚」 | @references/project.md |
 | 当前对话已经产出的结论 | 「把刚才聊的做成页面」 | 通用流程，不重新检索 |
